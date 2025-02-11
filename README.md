@@ -38,7 +38,7 @@ dependencyResolutionManagement {
 Add the dependency
 ```groovy
 dependencies {
-    implementation 'com.github.ogogolabs:pref-listener-live:${$last_version}'
+    implementation 'com.github.ogogolabs:pref_listener_live:${$last_version}'
 }
 ```
 

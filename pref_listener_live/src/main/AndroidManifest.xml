@@ -10,8 +10,7 @@
         </intent>
     </queries>
 
-    <application
-        android:debuggable="true">
+    <application>
         <receiver
             android:name=".SocketConnectionRunnerBroadcastReceiver"
             android:enabled="true"
