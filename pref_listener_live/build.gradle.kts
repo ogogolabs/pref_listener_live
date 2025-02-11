@@ -41,6 +41,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    flavorDimensionList += listOf("demo", "release")
 }
 
 dependencies {
