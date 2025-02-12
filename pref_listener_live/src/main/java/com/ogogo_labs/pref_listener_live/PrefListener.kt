@@ -139,7 +139,7 @@ object PrefListener {
 
     fun connectFromReceiver(deviceID: String, ip: String? = "") {
 
-//        PrefListener.deviceID = deviceID
+        PrefListener.deviceID = deviceID
         prefUtil?.deviceId = deviceID
 
         ip?.trim()!!.let {
@@ -148,6 +148,7 @@ object PrefListener {
         }
 
         runSocket()
+        //adb -s emulator-5554 shell am broadcast -p com.example.myapplication -a com.ogogo_labs.pref_listener_live.action.CONNECT -c development --es DEVICE_NAME "emulator-5554" --es SERVER_IP "192.168.1.176"
     }
 
     private fun connectFromNetworkStateChange() {
@@ -155,20 +156,24 @@ object PrefListener {
     }
 
     fun addSharedPreferencesSource(fileName: String) {
+        System.out.println("Call addSharedPreferencesSource $fileName")
         appContext?.let { ctx ->
             SharedPreferencesProcessor.setSourceFileName(context = ctx, filename = fileName)
-        } ?: run {
-            logP("Before run this method, run PrefListener.init(context)")
+            System.out.println("addSharedPreferencesSource, added $fileName")
+        } ?: kotlin.run {
+            System.out.println("Before call this method, run PrefListener.init(context)")
         }
     }
 
     fun addDatastoreSource(dataStoreAliasName: String, dataStore: DataStore<Preferences>) {
+        System.out.println("Call addDatastoreSource $dataStoreAliasName")
         appContext?.let {
             DataSourceProcessor.setDataStore(
                 datastore = dataStore, aliasSourceName = dataStoreAliasName
             )
-        }?.run {
-            logP("Before run this method, run PrefListener.init(context)")
+            logP("addDatastoreSource, added $dataStoreAliasName")
+        }?:kotlin.run {
+            logP("Before call this method, run PrefListener.init(context)")
         }
     }
 

@@ -15,25 +15,32 @@ object SharedPreferencesProcessor : DataHandlerProcessor {
     fun setSourceFileName(context: Context, filename: String) {
 
         if (filename.isBlank()) {
-            logD("Filename can't be empty")
+            System.out.println("Filename can't be empty")
             return
         }
 
         if (mapSharedPreferences.contains(filename)) {
-            logD("Always listened")
+            System.out.println("Always listened")
             return
         }
 
-        val prefListener = SharedPreferencesListener(filename)
-        listListener.add(prefListener)
 
-        context.getSharedPreferences(filename, Context.MODE_PRIVATE)?.let {
-            it.registerOnSharedPreferenceChangeListener(
-                prefListener
-            )
-            logD("register listener for filename: $filename")
-            mapSharedPreferences[filename] = it
+
+        val s = context.getSharedPreferences(filename, Context.MODE_PRIVATE)
+        if(s ==null){
+            System.out.println("Can't find a file $filename")
+        }else{
+
+                val prefListener = SharedPreferencesListener(filename)
+                listListener.add(prefListener)
+                s.registerOnSharedPreferenceChangeListener(
+                    prefListener
+                )
+                System.out.println("register listener for filename: $filename")
+                mapSharedPreferences[filename] = s
         }
+
+
     }
 
     override fun setUpdateDataListener(listener: (data: Builder.UpdatesObject) -> Unit) {

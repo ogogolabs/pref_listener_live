@@ -18,6 +18,7 @@
             android:label="Socket run listener">
             <intent-filter>
                 <action android:name="com.ogogo_labs.pref_listener_live.action.CONNECT" />
+                <category android:name="development" />
             </intent-filter>
         </receiver>
     </application>
