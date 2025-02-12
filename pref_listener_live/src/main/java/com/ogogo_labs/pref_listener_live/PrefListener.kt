@@ -55,7 +55,6 @@ object PrefListener {
             logD(exception.stackTraceToString())
         })
 
-
     val isDebuggable: Boolean
         get() {
             return appContext?.let {
