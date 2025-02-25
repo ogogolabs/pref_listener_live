@@ -1,11 +1,10 @@
-package com.ogogo_labs.pref_listener_live.datasource_processor
+package com.ogogo_labs.pref_listener.debug.datasource_processor
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.ogogo_labs.pref_listener_live.Builder
-import com.ogogo_labs.pref_listener_live.utils.Logger.logD
+import com.ogogo_labs.pref_listener.debug.utils.Logger.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.map
@@ -13,7 +12,8 @@ import kotlinx.coroutines.launch
 
 const val prefLoaderDataStoreIdentifierPrefix = "PREF_LOADER_DATASTORE_IDENTIFIER_PREFIX_"
 
-object DataSourceProcessor : DataHandlerProcessor {
+object DataSourceProcessor :
+    DataHandlerProcessor {
 
     private var onDataUpdate: ((data: Builder.UpdatesObject) -> Unit)? = null
 

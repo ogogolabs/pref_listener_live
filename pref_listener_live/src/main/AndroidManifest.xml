@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    
     <queries>
         <intent>
             <action android:name="com.ogogo_labs.pref_listener_live.action.CONNECT" />
         </intent>
     </queries>
-
+    
+    <meta-data
+        android:name="BUILD_TYPE_IMPLEMENTATION"
+        android:value="${BUILD_TYPE_IMPLEMENTATION}" />
+    
     <application>
         <receiver
+            
             android:name=".SocketConnectionRunnerBroadcastReceiver"
             android:enabled="true"
             android:exported="true"

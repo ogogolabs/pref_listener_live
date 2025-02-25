@@ -1,5 +1,5 @@
-package com.ogogo_labs.pref_listener_live
-import com.ogogo_labs.pref_listener_live.utils.Logger.logD
+package com.ogogo_labs.pref_listener.debug.socket
+import com.ogogo_labs.pref_listener.debug.utils.Logger.logD
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.BufferedWriter
@@ -8,6 +8,8 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.net.Socket
 import kotlin.concurrent.thread
+
+const val PORT = 55690
 
 object NativeSocket {
     private var socket: Socket? = null

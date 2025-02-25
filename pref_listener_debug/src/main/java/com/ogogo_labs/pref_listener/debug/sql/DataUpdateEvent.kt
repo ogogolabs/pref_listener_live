@@ -1,4 +1,4 @@
-package com.ogogo_labs.pref_listener_live.sql
+package com.ogogo_labs.pref_listener.debug.sql
 
 import android.content.Context
 import androidx.room.ColumnInfo
@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.ogogo_labs.pref_listener_live.Builder
+import com.ogogo_labs.pref_listener.debug.datasource_processor.Builder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 

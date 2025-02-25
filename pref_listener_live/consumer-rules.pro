@@ -1,0 +1,3 @@
+-dontwarn java.lang.invoke.StringConcatFactory
+-dontwarn com.ogogo_labs.pref_listener_live.PrefListener
+-keep class com.ogogo_labs.pref_listener_live.PrefListener

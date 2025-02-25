@@ -1,4 +1,4 @@
-package com.ogogo_labs.pref_listener_live.utils
+package com.ogogo_labs.pref_listener.debug.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -7,7 +7,7 @@ import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import com.ogogo_labs.pref_listener_live.utils.Logger.logD
+import com.ogogo_labs.pref_listener.debug.utils.Logger.logD
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

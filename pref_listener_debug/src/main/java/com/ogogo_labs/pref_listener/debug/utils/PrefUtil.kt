@@ -1,4 +1,4 @@
-package com.ogogo_labs.pref_listener_live.utils
+package com.ogogo_labs.pref_listener.debug.utils
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE

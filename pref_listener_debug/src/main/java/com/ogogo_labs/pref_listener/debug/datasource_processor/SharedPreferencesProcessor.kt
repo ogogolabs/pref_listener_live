@@ -1,9 +1,8 @@
-package com.ogogo_labs.pref_listener_live.datasource_processor
+package com.ogogo_labs.pref_listener.debug.datasource_processor
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.ogogo_labs.pref_listener_live.Builder
-import com.ogogo_labs.pref_listener_live.utils.Logger.logD
+import com.ogogo_labs.pref_listener.debug.utils.Logger.logD
 import kotlinx.coroutines.CoroutineScope
 
 object SharedPreferencesProcessor : DataHandlerProcessor {
@@ -25,19 +24,18 @@ object SharedPreferencesProcessor : DataHandlerProcessor {
         }
 
 
-
         val s = context.getSharedPreferences(filename, Context.MODE_PRIVATE)
-        if(s ==null){
+        if (s == null) {
             System.out.println("Can't find a file $filename")
-        }else{
+        } else {
 
-                val prefListener = SharedPreferencesListener(filename)
-                listListener.add(prefListener)
-                s.registerOnSharedPreferenceChangeListener(
-                    prefListener
-                )
-                System.out.println("register listener for filename: $filename")
-                mapSharedPreferences[filename] = s
+            val prefListener = SharedPreferencesListener(filename)
+            listListener.add(prefListener)
+            s.registerOnSharedPreferenceChangeListener(
+                prefListener
+            )
+            System.out.println("register listener for filename: $filename")
+            mapSharedPreferences[filename] = s
         }
 
 
@@ -52,7 +50,10 @@ object SharedPreferencesProcessor : DataHandlerProcessor {
     }
 
     private fun buildAndSendPrefData(
-        pref: SharedPreferences, key: String?, sourceName: String, isReconnection: Boolean = false // don't touch this val
+        pref: SharedPreferences,
+        key: String?,
+        sourceName: String,
+        isReconnection: Boolean = false // don't touch this val
     ) {
         val message = Builder(
             source = Builder.SOURCE.SHARED_PREFERENCES,

@@ -14,8 +14,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -25,6 +23,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["BUILD_TYPE_IMPLEMENTATION"] = "release"
         }
         debug {
             isMinifyEnabled = false
@@ -32,6 +31,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["BUILD_TYPE_IMPLEMENTATION"] = "debug"
         }
     }
     compileOptions {
@@ -61,4 +61,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.datastore.preferences)
     implementation(project(":pref_listener_live"))
+}
+
+tasks.named("clean"){
+    doLast {
+        delete("release")
+    }
 }

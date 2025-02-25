@@ -1,4 +1,4 @@
-package com.ogogo_labs.pref_listener_live
+package com.ogogo_labs.pref_listener.debug.datasource_processor
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

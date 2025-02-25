@@ -1,244 +1,130 @@
 package com.ogogo_labs.pref_listener_live
 
-import android.Manifest
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.ogogo_labs.pref_listener_live.datasource_processor.DataSourceProcessor
-import com.ogogo_labs.pref_listener_live.datasource_processor.SharedPreferencesProcessor
-import com.ogogo_labs.pref_listener_live.sql.DataUpdateEvent
-import com.ogogo_labs.pref_listener_live.sql.PrefListenerDatabase
-import com.ogogo_labs.pref_listener_live.sql.toDTO
-import com.ogogo_labs.pref_listener_live.utils.Logger.logD
-import com.ogogo_labs.pref_listener_live.utils.Logger.logP
-import com.ogogo_labs.pref_listener_live.utils.NetworkMonitoringUtil
-import com.ogogo_labs.pref_listener_live.utils.PrefUtil
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.util.concurrent.Executors
-
-const val PORT = 55690
-const val development = true
 
 object PrefListener {
-    //--- manageSDK
-    private var sdkInited = false
-    private var deviceID: String = ""
-    private var connectionIP: String = ""
-    private val mDelay = if (development) {
-        1500L
-    } else {
-        4L
-    }
 
-    //--- App vars
+    private var worker: com.ogogo_labs.pref_listener.core.WorkerWrapper? = null
     private var appContext: Context? = null
+    private var sdkInitialized = false
 
-    private var prefUtil: PrefUtil? = null
-
-    private var networkStateHolder: NetworkMonitoringUtil? = null
-
-    private var executor = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private val scope =
-        CoroutineScope(SupervisorJob() + executor + CoroutineExceptionHandler { _, exception ->
-            logD(exception.stackTraceToString())
-        })
-
-    val isDebuggable: Boolean
+    private val isDebuggable: Boolean
         get() {
             return appContext?.let {
                 0 != it.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE
-            }?.run {
+            } ?: kotlin.run {
                 false
-            }!!
+            }
         }
-
-
-    // database
-    private var database: PrefListenerDatabase? = null
 
     fun init(
         ctx: Context
     ) {
-        System.out.println("PrefListenerDEBUG init")
-        appContext = ctx.applicationContext
-        logD("Bla Bla Bla start init")
-        if (sdkInited) {
-            return
-        }
+        synchronized(this) {
 
-        prefUtil = PrefUtil(ctx)
-
-        database = PrefListenerDatabase.getDatabase(ctx)
-
-        if (checkPermissions(ctx)) {
-            networkStateHolder = NetworkMonitoringUtil(appContext!!).apply {
-                registerNetworkCallbackEvents()
-                checkNetworkState()
+            if (sdkInitialized) {
+                return
             }
-        } else {
-            logD("There is not permission for INTERNET")
-        }
 
-        scope.launch {
-            networkStateHolder?.networkState?.collectLatest { isConnected ->
-                logD("Network state $isConnected")
-                if (isConnected) {
-                    connectFromNetworkStateChange()
+            appContext = ctx
+
+            val buildTypeRequested = getBuildTypeRequested(ctx)
+            if(isDebuggable) {
+                // allow work in debug mode
+            } else {
+                if (buildTypeRequested != BuildType.DEBUG) {
+                    throw Error("Do you relly wont to use this library in release version? Use BUILD_TYPE_IMPLEMENTATION as a configuration parameter!")
                 }
             }
+
+            getWorker(ctx)
+
+            sdkInitialized = true
         }
-
-        connectionIP = prefUtil?.ip.orEmpty()
-        deviceID = prefUtil?.deviceId.orEmpty()
-
-        SharedPreferencesProcessor.setWorkerScope(scope)
-        DataSourceProcessor.setWorkerScope(scope)
-        SharedPreferencesProcessor.setUpdateDataListener(PrefListener::saveNewEvent)
-        DataSourceProcessor.setUpdateDataListener(PrefListener::saveNewEvent)
-
-        scope.launch {
-
-            database?.let { db ->
-                combine(
-                    db.dataDao().getLastEvent().distinctUntilChanged(), NativeSocket.socketState
-                ) { dataList, networkState ->
-                    dataList to networkState
-                }.collect { data ->
-                    logD("distinctUntilChanged:  $data")
-                    data.first?.let { item ->
-                        if (sendMessageNativeThread(item.toDTO())) {
-                            deleteEventFromDB(item)
-                        }
-                    }
-                }
-            }
-        }
-
-        sdkInited = true
     }
 
+    private fun getWorker(ctx: Context) {
+        val buildTypeRequested = getBuildTypeRequested(ctx)
 
-    private fun deleteEventFromDB(event: DataUpdateEvent) {
-        scope.launch {
-            delay(mDelay)
-            database?.dataDao()?.deleteEvent(event)
+        val className = if (buildTypeRequested == BuildType.DEBUG) {
+            "com.ogogo_labs.pref_listener.debug.WorkerWrapper"
+        } else {
+            "com.ogogo_labs.pref_listener.prod.WorkerWrapper"
+        }
+
+        worker =  try {
+            className.let {
+                val clazz = Class.forName(it)
+                val constructor = clazz.getConstructor(Context::class.java)
+                constructor.newInstance(ctx) as com.ogogo_labs.pref_listener.core.WorkerWrapper
+            }
+        } catch (e: Exception) {
+            println(e.printStackTrace())
+            null
+        }
+
+    }
+
+    private fun getBuildTypeRequested(ctx: Context):BuildType{
+        val buildTypeRequested = try {
+            val appContext = ctx.applicationContext
+            val appInfo = appContext.packageManager.getApplicationInfo(
+                appContext.packageName,
+                PackageManager.GET_META_DATA
+            )
+            appInfo.metaData?.getString("BUILD_TYPE_IMPLEMENTATION") ?: "undefined"
+        } catch (e: Exception) {
+            println(e.printStackTrace())
+            "undefined"
+        }
+
+        return when (buildTypeRequested) {
+            "debug" -> BuildType.DEBUG
+            "release" -> BuildType.RELEASE
+            else -> {
+                if (isDebuggable) {
+                    BuildType.DEBUG
+                } else {
+                    BuildType.RELEASE
+                }
+            }
         }
     }
 
     fun connectFromReceiver(deviceID: String, ip: String? = "") {
-
-        PrefListener.deviceID = deviceID
-        prefUtil?.deviceId = deviceID
-
-        ip?.trim()!!.let {
-            connectionIP = it
-            prefUtil?.ip = it
+        if (sdkInitialized) {
+            worker?.connectFromReceiver(deviceID, ip)
+            worker?.let {
+                println("${it::class.java}")
+            }
+            println("PrefListener Initialized")
+        } else {
+            println("PrefListener NOT Initialized")
         }
-
-        runSocket()
-        //adb -s emulator-5554 shell am broadcast -p com.example.myapplication -a com.ogogo_labs.pref_listener_live.action.CONNECT -c development --es DEVICE_NAME "emulator-5554" --es SERVER_IP "192.168.1.176"
-    }
-
-    private fun connectFromNetworkStateChange() {
-        runSocket()
     }
 
     fun addSharedPreferencesSource(fileName: String) {
-        System.out.println("Call addSharedPreferencesSource $fileName")
-        appContext?.let { ctx ->
-            SharedPreferencesProcessor.setSourceFileName(context = ctx, filename = fileName)
-            System.out.println("addSharedPreferencesSource, added $fileName")
-        } ?: kotlin.run {
-            System.out.println("Before call this method, run PrefListener.init(context)")
+        if (sdkInitialized) {
+            worker?.addSharedPreferencesSource(fileName)
+        } else {
+            println("PrefListener NOT Initialized addSharedPreferencesSource")
         }
     }
 
     fun addDatastoreSource(dataStoreAliasName: String, dataStore: DataStore<Preferences>) {
-        System.out.println("Call addDatastoreSource $dataStoreAliasName")
-        appContext?.let {
-            DataSourceProcessor.setDataStore(
-                datastore = dataStore, aliasSourceName = dataStoreAliasName
-            )
-            logP("addDatastoreSource, added $dataStoreAliasName")
-        }?:kotlin.run {
-            logP("Before call this method, run PrefListener.init(context)")
+        if (sdkInitialized) {
+            worker?.addDatastoreSource(dataStoreAliasName, dataStore)
+        } else {
+            println("PrefListener NOT Initialized addDatastoreSource")
         }
     }
 
-    private fun runSocket() {
+}
 
-        if (deviceID.isEmpty()) {
-            logD("connectFromNetworkStateChange deviceID is empty")
-            return
-        }
-
-        if (connectionIP.isEmpty()) {
-            logD("IP is empty, can't run socket")
-            return
-        }
-
-        if (appContext != null && checkPermissions(appContext!!) && networkStateHolder?.checkNetworkState() == false) {
-            logD("startSocket: networkStatus ${networkStateHolder?.networkState?.value} return")
-            return
-        }
-
-        NativeSocket.createSocket(connectionIP, PORT) {
-            logD("startSocket: Socket is starting")
-        }
-    }
-
-    private fun sendMessageNativeThread(message: Builder.UpdatesObject): Boolean {
-        if (NativeSocket.socketState.value != SocketState.CONNECTED) {
-            logD("-----socketClient not connected -----")
-            return false
-        }
-
-        val isSuccess = NativeSocket.sendMessage(
-            Json.encodeToString(
-                message.copy(
-                    deviceId = deviceID, project = appContext?.packageName.orEmpty()
-                )
-            )
-        )
-
-        return isSuccess
-    }
-
-    private fun saveNewEvent(message: Builder.UpdatesObject) {
-
-        if (message.data.isEmpty()) {
-            return
-        }
-
-        scope.launch {
-            database?.dataDao()?.insertEvent(
-                DataUpdateEvent(
-                    id = null,
-                    sourceName = message.sourceName,
-                    sourceType = message.source,
-                    data = message.data.toString(),
-                    timestamp = message.timestamp,
-                    reConnection = false
-                )
-            )
-        }
-    }
-
-    private fun checkPermissions(ctx: Context): Boolean {
-        return ctx.checkSelfPermission(Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED && ctx.checkSelfPermission(
-            Manifest.permission.ACCESS_NETWORK_STATE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+private enum class BuildType {
+    DEBUG, RELEASE
 }
