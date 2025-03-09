@@ -1,0 +1,22 @@
+CREATE TABLE PrefEvent (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  dataObject TEXT NOT NULL,
+  timestamp INTEGER NOT NULL
+);
+
+CREATE INDEX timestamp_imdex ON PrefEvent(timestamp);
+
+selectAll:
+SELECT *
+FROM PrefEvent;
+
+getFirstEvent:
+SELECT *
+FROM PrefEvent ORDER BY timestamp ASC LIMIT 1;
+
+deleteElementByTimestamp:
+DELETE FROM PrefEvent WHERE timestamp = ?;
+
+insertNewEvent:
+INSERT INTO PrefEvent(dataObject, timestamp)
+VALUES (?,?);

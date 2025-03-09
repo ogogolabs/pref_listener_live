@@ -20,18 +20,16 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
-            manifestPlaceholders["BUILD_TYPE_IMPLEMENTATION"] = "release"
+            gradle.extra.set("prefListenerBuildType_${this.name}",  "true")
         }
         debug {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
-            manifestPlaceholders["BUILD_TYPE_IMPLEMENTATION"] = "debug"
+            gradle.extra.set("prefListenerBuildType_${this.name}",  "true")
         }
     }
     compileOptions {
@@ -44,7 +42,23 @@ android {
     buildFeatures {
         compose = true
     }
+    flavorDimensions += "version"
+    productFlavors{
+        create("prod"){
+            dimension = "version"
+            gradle.extra.set("prefListenerBuildType_${this.name}",  "false")
+        }
+        create("qa"){
+            dimension = "version"
+            gradle.extra.set("prefListenerBuildType_${this.name}",  "true")
+        }
+        create("dev"){
+            dimension = "version"
+            gradle.extra.set("prefListenerBuildType_${this.name}",  "true")
+        }
+    }
 }
+
 
 dependencies {
 
@@ -63,7 +77,7 @@ dependencies {
     implementation(project(":pref_listener_live"))
 }
 
-tasks.named("clean"){
+tasks.named("clean") {
     doLast {
         delete("release")
     }

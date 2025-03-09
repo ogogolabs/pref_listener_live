@@ -27,7 +27,4 @@ dependencyResolutionManagement {
 rootProject.name = "My Application"
 include(":app")
 include(":pref_listener_live")
-include(":pref_listener_core")
-include(":pref_listener_prod")
-include(":pref_listener_debug")
 

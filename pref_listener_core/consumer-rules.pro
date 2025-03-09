@@ -1,1 +1,0 @@
--keep interface com.ogogo_labs.pref_listener.core.WorkerWrapper

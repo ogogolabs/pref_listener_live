@@ -1,0 +1,16 @@
+{
+  "source": "SHARED_PREFERENCES",
+  "project": "",
+  "sourceName": "filename",
+  "data": [
+    {
+      "k": "DOUBLE_SHARED",
+      "v": "1.0",
+      "vt": "FLOAT",
+      "d": false
+    }
+  ],
+  "t": 1741034404122,
+  "ver": 1,
+  "reConnection": false
+}

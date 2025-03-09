@@ -1,1 +1,0 @@
--keep class com.ogogo_labs.pref_listener.debug.WorkerWrapper

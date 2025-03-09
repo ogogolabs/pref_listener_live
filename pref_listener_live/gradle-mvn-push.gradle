@@ -1,0 +1,35 @@
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        myPublish (MavenPublication) {
+            groupId "com.example.samplephotolib"
+            artifactId "samplePhotoLib"
+            version "5.0.0"
+            artifact "$buildDir/outputs/aar/samplePhotoLib-release.aar"
+
+
+            pom.withXml {
+                def dependencies = asNode().appendNode('dependencies')
+                configurations.getByName("releaseCompileClasspath").getResolvedConfiguration().getFirstLevelModuleDependencies().each {
+                    def dependency = dependencies.appendNode('dependency')
+                    dependency.appendNode('groupId', it.moduleGroup)
+                    dependency.appendNode('artifactId', it.moduleName)
+                    dependency.appendNode('version', it.moduleVersion)
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://gitlab.com/api/v4/projects/projectId/packages/maven"
+            credentials(HttpHeaderCredentials) {
+                name = "Private-Token"
+                value = "gitLabAccessToken"
+            }
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+        }
+    }
+}
